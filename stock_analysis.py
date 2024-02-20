@@ -1,35 +1,38 @@
-import diskcache as dc
+import time
 from tqdm import tqdm
 import yfinance as yf
 import pandas as pd
-import time
+from diskcache import Cache
 from atr_calculator import calculate_14_day_ATR
+from market_time_utilities import get_next_friday_market_close
 
 # ANSI escape codes for colors
 red_color_start = "\033[91m"
 green_color_start = "\033[92m"
 color_reset = "\033[0m"
 
-cache = dc.Cache('./cache')
+cache = Cache('./cache')
 
 def fetch_data_with_progress_bar(ticker):
     cache_key = f"{ticker}_data"
-    # Check if data is in cache
     if cache_key in cache:
-        print("Loading data from cache for", ticker)
+        print(f"Loading data from cache for {ticker}.")
         return cache[cache_key]
-    
-    print("Fetching data for", ticker)
+
+    print(f"Fetching data for {ticker}.")
     for _ in tqdm(range(5), desc="Loading"):
         time.sleep(1)  # Simulate time delay for fetching
+    
     try:
         data = yf.download(ticker, start='2024-2-12', end='2024-2-16', interval='1wk')
-        data['Weekly Range'] = data['High'] - data['Low']
-        # Store fetched data in cache
-        cache[cache_key] = data
-        return data
+        if not data.empty:
+            data['Weekly Range'] = data['High'] - data['Low']
+            expiration_time = get_next_friday_market_close()
+            cache.set(cache_key, data, expire=(expiration_time - time.time()))
+            print("Data fetched successfully!")
+            return data
     except Exception as e:
-        print("Failed to fetch data:", e)
+        print(f"Failed to fetch data: {e}")
         return None
 
 def get_weekly_range(ticker):
