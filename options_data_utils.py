@@ -31,7 +31,7 @@ def fetch_options_data_for_debit_spread(ticker, expiration_preference, expiratio
         print(f"\n{blue_color_start}Loading debit spread data from cache for {ticker} for expiration {nearest_expiration_date.strftime('%Y-%m-%d')}.{color_reset}\n")
         debit_spreads = cache[cache_key]
     else:
-        print(f"Fetching debit spread data for {ticker}.")
+        print(f"\n{green_color_start}Fetching debit spread data for {ticker}.{color_reset}\n")
         try:
             opts = stock.option_chain(nearest_expiration_date.strftime('%Y-%m-%d'))
             calls = opts.calls
@@ -74,7 +74,7 @@ def fetch_options_data_for_debit_spread(ticker, expiration_preference, expiratio
             debit_spreads = pd.DataFrame(potential_spreads).sort_values(by='openInterest', ascending=False).head(10)
             cache.set(cache_key, debit_spreads, expire=86400)  # Cache for 24 hours
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"\n{red_color_start}An error occurred: {e}{color_reset}\n")
             debit_spreads = pd.DataFrame()
     
     return debit_spreads

@@ -31,7 +31,7 @@ def main():
             print(f"\nHistorical Volatility (Annualized) for {ticker}: {hv:.2%}\n")
         elif choice == '5':
             vix = fetch_vix()
-            print(f"\nCurrent VIX (Market Volatility Expectation): {vix:.2f}\n")
+            print(f"\nHistorical VIX (Market Volatility Expectation - Annualized): {vix:.2f}\n")
         else:
             print("\nInvalid choice. Please enter a valid option.\n")
 
