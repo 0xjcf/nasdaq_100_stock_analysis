@@ -5,8 +5,8 @@ import pandas as pd
 from tqdm import tqdm
 from diskcache import Cache
 from atr_calculator import calculate_14_day_ATR
-from market_time_utilities import get_next_friday_market_close
-from stock_data_utils import fetch_weekly_range, fetch_and_display_technical_indicators
+from market_time_utils import get_next_friday_market_close
+from stock_data_utils import fetch_and_display_against_RSI, fetch_and_display_price_against_BB, fetch_weekly_range
 from fundamental_analysis import fetch_fundamental_data, print_fundamental_data
 
 # ANSI escape codes for colors
@@ -41,7 +41,10 @@ def get_stock_analysis(ticker):
     print(f"\n{'='*40} Stock Analysis for {ticker} {'='*40}\n")
     # Fetch and display daily technical indicators
     fetch_weekly_range(ticker)
-    fetch_and_display_technical_indicators(ticker)
+    # fetch_and_display_technical_indicators(ticker)
+    fetch_and_display_price_against_BB(ticker)
+    fetch_and_display_against_RSI(ticker)
+    
     # Fetch and display fundamental data
     fundamental_data = fetch_fundamental_data(ticker)
     print_fundamental_data(fundamental_data)
@@ -60,22 +63,3 @@ def get_top_volatile_stocks(min_move, max_price):
         print(f"{green_color_start}{row['Symbol']}: {row['Weekly Range']}{color_reset}")
     print("\n")
 
-def main():
-    print("\nSelect an option:")
-    print("1. Display data analysis for a specific stock")
-    print("2. Identify top 10 most volatile NASDAQ-100 stocks with specified criteria")
-
-    choice = input("Enter your choice (1 or 2): ")
-
-    if choice == '1':
-        ticker = input("Enter the ticker symbol: ").upper()
-        get_stock_analysis(ticker)
-    elif choice == '2':
-        min_move = float(input("Enter the minimum dollar movement for the week: "))
-        max_price = float(input("Enter the maximum price of the stock: "))
-        get_top_volatile_stocks(min_move, max_price)
-    else:
-        print("Invalid choice. Please enter 1 or 2.")
-
-if __name__ == "__main__":
-    main()

@@ -1,7 +1,7 @@
 import time
 import yfinance as yf
 from diskcache import Cache
-from market_time_utilities import get_next_friday_market_close
+from market_time_utils import get_next_friday_market_close
 
 # ANSI escape code for blue color
 red_color_start = "\033[91m"

@@ -1,6 +1,6 @@
 import yfinance as yf
 import diskcache as dc
-from market_time_utilities import get_next_friday_market_close
+from market_time_utils import get_next_friday_market_close
 import datetime
 
 cache = dc.Cache('./cache')

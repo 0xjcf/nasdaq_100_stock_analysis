@@ -1,8 +1,9 @@
 from diskcache import Cache
 import yfinance as yf
+import pandas as pd
 import ta
 import time
-from market_time_utilities import get_next_friday_market_close
+from market_time_utils import get_next_friday_market_close
 
 red_color_start = "\033[91m"
 green_color_start = "\033[92m"
@@ -19,7 +20,7 @@ def fetch_weekly_range(ticker):
             weekly_data = cache[cache_key]
         else:
             print(f"\n{green_color_start}Fetching weekly range data for {ticker}.{color_reset}\n")
-            weekly_data = yf.download(ticker, period='1wk', interval='1wk')
+            weekly_data = yf.download(ticker, period='12wk', interval='1wk')
             if not weekly_data.empty:
                 weekly_data['Weekly Range'] = weekly_data['High'] - weekly_data['Low']
                 expiration_time = get_next_friday_market_close() - time.time()
@@ -28,7 +29,7 @@ def fetch_weekly_range(ticker):
                 print(f"\n{red_color_start}Failed to fetch weekly data.{color_reset}\n")
         
         if not weekly_data.empty:
-            print(weekly_data[['High', 'Low', 'Weekly Range']])
+            print(weekly_data[['High', 'Low', 'Close', 'Weekly Range']])
     except Exception as e:
         print(f"\n{red_color_start}An error occurred while fetching weekly range for {ticker}: {e}{color_reset}\n")
 
@@ -56,3 +57,89 @@ def fetch_and_display_technical_indicators(ticker):
             print(daily_data[['RSI', 'BB_high', 'BB_mid', 'BB_low']].tail())
     except Exception as e:
         print(f"\n{red_color_start}An error occurred while fetching daily technical indicators for {ticker}: {e}{color_reset}\n")
+
+
+def calculate_bollinger_bands(prices, window=20, no_of_stds=2):
+    """
+    Calculate Bollinger Bands for a given set of prices.
+    
+    :param prices: Pandas Series of stock prices.
+    :param window: The period for calculating the moving average.
+    :param no_of_stds: The number of standard deviations to consider for the band width.
+    :return: A DataFrame with columns for the Bollinger Bands (upper_band, lower_band) and moving average (ma).
+    """
+    rolling_mean = prices.rolling(window=window).mean()
+    rolling_std = prices.rolling(window=window).std()
+    
+    upper_band = rolling_mean + (rolling_std * no_of_stds)
+    lower_band = rolling_mean - (rolling_std * no_of_stds)
+    
+    return pd.DataFrame({'ma': rolling_mean, 'upper_band': upper_band, 'lower_band': lower_band})
+
+
+def fetch_and_display_price_against_BB(ticker):
+    # Fetch historical data
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="1y")  # Example period
+    close_prices = hist['Close']
+    
+    # Calculate Bollinger Bands
+    bollinger_bands = calculate_bollinger_bands(close_prices)
+    
+    # Fetch the latest price
+    latest_price = close_prices.iloc[-1]
+    
+    # Compare the latest price to the Bollinger Bands
+    latest_band_data = bollinger_bands.iloc[-1]
+    print(f"\nLatest price for {ticker}: {latest_price}\n")
+    print(f"Bollinger Bands (Latest):")
+    print(f" - Upper Band: {latest_band_data['upper_band']}")
+    print(f" - Moving Average: {latest_band_data['ma']}")
+    print(f" - Lower Band: {latest_band_data['lower_band']}")
+    
+    # Indicate the position of the latest price relative to the Bollinger Bands
+    if latest_price > latest_band_data['upper_band']:
+        print("\nThe latest price is above the upper Bollinger Band.\n")
+    elif latest_price < latest_band_data['lower_band']:
+        print("\nThe latest price is below the lower Bollinger Band.\n")
+    else:
+        print("\nThe latest price is within the Bollinger Bands.\n")
+        
+def calculate_rsi(prices, window=14):
+    """
+    Calculate the Relative Strength Index (RSI) for a given set of prices.
+    
+    :param prices: Pandas Series of stock prices.
+    :param window: The period (number of days) over which to calculate the RSI.
+    :return: A Pandas Series containing the RSI values.
+    """
+    delta = prices.diff(1)
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
+
+    avg_gain = gain.rolling(window=window, min_periods=1).mean()
+    avg_loss = loss.rolling(window=window, min_periods=1).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    
+    return rsi        
+        
+def fetch_and_display_against_RSI(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="1y")  # Fetch 6 months of historical data
+    close_prices = hist['Close']
+    
+    # Calculate RSI using the refined function
+    rsi = calculate_rsi(close_prices)
+    latest_rsi = rsi.iloc[-1]
+
+    print(f"RSI (Latest): {latest_rsi:.2f}")
+    
+    # Analyze the latest RSI value for overbought/oversold conditions
+    if latest_rsi > 70:
+        print("\nThe RSI indicates the stock is in overbought territory.\n")
+    elif latest_rsi < 30:
+        print("\nThe RSI indicates the stock is in oversold territory.\n")
+    else:
+        print("\nThe RSI is within normal range.\n")
