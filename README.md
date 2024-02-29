@@ -25,9 +25,9 @@ The tool offers the following options for stock market analysis:
 
 ## Note on Data Handling
 
-At the current stage, the project requires manually importing a CSV file (`stocks-screener-02-24-2024.csv`) containing stock data. This file should be placed in the `data/` directory relative to the project's root. 
+At the current stage, the project requires manually importing a CSV file (`stocks-screener-02-29-2024.csv`) containing stock data.
 
-We recognize the importance of having the most up-to-date data for stock analysis and are working on integrating direct data fetching from financial APIs in future updates. This enhancement will automate data retrieval, ensuring users always have access to the latest stock market information without manual steps.
+I recognize the importance of having the most up-to-date data for stock analysis and are working on integrating direct data fetching from financial APIs in future updates. This enhancement will automate data retrieval, ensuring users always have access to the latest stock market information without manual steps.
 
 If you wish to use the most current data before this feature is implemented, you will need to manually update the CSV file with recent data from your preferred financial data source.
 
