@@ -34,7 +34,7 @@ If you wish to use the most current data before this feature is implemented, you
 ## Installation and Usage
 
 ```bash
-git clone https://github.com/0xjcf/nasdaq_100_stock_analysis.git
-cd nasdaq_100_stock_analysis
+git clone https://github.com/0xjcf/stock_analysis.git
+cd stock_analysis
 pip install -r requirements.txt
 python main.py
