@@ -1,4 +1,8 @@
+import os
+import pickle
 from diskcache import Cache
+from tqdm import tqdm
+
 import yfinance as yf
 import pandas as pd
 import ta
@@ -11,6 +15,23 @@ blue_color_start = "\033[94m"
 color_reset = "\033[0m"
 
 cache = Cache('./cache')
+
+current_directory = os.path.dirname(__file__)
+
+csv_file_path = os.path.join(current_directory, 'stocks-screener-02-29-2024.csv')
+
+def fetch_data_with_progress_bar(ticker):
+    """Fetch historical data with a loading indicator."""
+    print(f"Fetching data for {ticker}...")
+    for _ in tqdm(range(1), desc=f"Loading {ticker}"):
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")
+            if hist.empty:
+                return None, "No data"
+            return hist, None
+        except Exception as e:
+            return None, str(e)
 
 def fetch_weekly_range(ticker):
     cache_key = f"{ticker}_weekly_range"
@@ -143,3 +164,40 @@ def fetch_and_display_against_RSI(ticker):
         print("\nThe RSI indicates the stock is in oversold territory.\n")
     else:
         print("\nThe RSI is within normal range.\n")
+        
+def filter_extreme_stocks():
+    file_path = csv_file_path
+    stock_list = pd.read_csv(file_path)['Symbol'].tolist()
+    extreme_stocks = []
+    
+    for ticker in tqdm(stock_list, desc="Analyzing stocks", colour='green'):
+        # Check cache first
+        cached_data = cache.get(ticker)
+        if cached_data:
+            hist, error = pickle.loads(cached_data), None
+        else:
+            hist, error = fetch_data_with_progress_bar(ticker)
+            if hist is not None:
+                cache.set(ticker, pickle.dumps(hist), expire=86400)  # Cache for 1 day
+
+        if error or hist is None:
+            print(f"Error fetching data for {ticker}: {error}")
+            continue
+
+        close_prices = hist['Close']
+        bollinger_bands = calculate_bollinger_bands(close_prices)
+        rsi = calculate_rsi(close_prices)
+        
+        latest_price = close_prices.iloc[-1]
+        latest_upper_band = bollinger_bands['upper_band'].iloc[-1]
+        latest_lower_band = bollinger_bands['lower_band'].iloc[-1]
+        latest_rsi = rsi.iloc[-1]
+
+        # Check for extreme conditions
+        if (latest_price >= latest_upper_band and latest_rsi >= 70) or \
+           (latest_price <= latest_lower_band and latest_rsi <= 30):
+            extreme_stocks.append((ticker, latest_price, latest_rsi, latest_upper_band, latest_lower_band))
+    
+    # Sort and limit the list based on your criteria
+    extreme_stocks.sort(key=lambda x: -x[2])  # Example: Sort by RSI value, descending
+    return extreme_stocks[:10]

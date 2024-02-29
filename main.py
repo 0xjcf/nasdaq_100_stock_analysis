@@ -1,5 +1,11 @@
+from clear_cache import clear_data_cache
 from stock_analysis import get_stock_analysis, get_top_volatile_stocks
 from options_data_utils import calculate_hv, display_debit_spread_data, fetch_vix
+from stock_data_utils import filter_extreme_stocks
+
+green_color_start = "\033[92m"
+orange_color_start = "\033[38;5;208m"
+color_reset = "\033[0m"
 
 def main():
     while True:
@@ -9,6 +15,8 @@ def main():
         print("3. Fetch Options Chain Data and Highlight ATM/OTM Options")
         print("4. Calculate Historical Volatility for a specific stock")
         print("5. Display Historical VIX Value")
+        print("6. Filter extreme level stocks")
+        print("7. Clear the cache (Set to clear every Friday after market hours)")
 
         choice = input("\nEnter your choice or type 'exit' to quit: ").strip().lower()  # .strip() removes any leading/trailing whitespace
             
@@ -32,6 +40,16 @@ def main():
         elif choice == '5':
             vix = fetch_vix()
             print(f"\nHistorical VIX (Market Volatility Expectation - Annualized): {vix:.2f}\n")
+        elif choice == '6':
+            extreme_stocks = filter_extreme_stocks()
+            print("\nTop Extreme Level Stocks:")
+            for stock in extreme_stocks:
+                print(f"{orange_color_start}Ticker: {stock[0]}, Latest Price: {stock[1]}, RSI: {stock[2]}, Upper Band: {stock[3]}, Lower Band: {stock[4]}{color_reset}")
+        elif choice == '7':
+            print("Clearing the cache...")
+            clear_data_cache()
+            # Clear the cache here
+            print("Cache cleared successfully.")
         else:
             print("\nInvalid choice. Please enter a valid option.\n")
 
