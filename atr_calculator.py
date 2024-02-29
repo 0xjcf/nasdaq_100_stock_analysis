@@ -1,9 +1,9 @@
 import yfinance as yf
-import diskcache as dc
+from diskcache import Cache
 from market_time_utils import get_next_friday_market_close
 import datetime
 
-cache = dc.Cache('./cache')
+cache = Cache('./cache')
 
 def calculate_14_day_ATR(ticker):
     cache_key = f"{ticker}_14_day_ATR"
