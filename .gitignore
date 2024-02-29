@@ -125,3 +125,4 @@ dmypy.json
 
 cache.db
 cache_data/*
+cache/*
